@@ -1,0 +1,14 @@
+"repositories": [
+    {
+        "type": "package",
+        "package": {
+            "name": "uzmiMe/inStore",
+            "version": "dev-master",
+            "source": {
+                "url": "git://github.com/UglyWillDuckling/in-store-pickup-module-m2.git",
+                "type": "git",
+                "reference": "master"
+            }
+        }
+    }
+],
