@@ -1,5 +1,5 @@
 {
-   "name": "weaverryan/derp-dangerzone",
+   "name": "uzmiMe/inStore",
     "autoload": {
         "psr-0" : {
             "Weaverryan\\DangerZone" : "src"
