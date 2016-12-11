@@ -59,8 +59,8 @@ define(
             defaults: {
                 template: 'Magento_Checkout/shipping'
             },
-            stores: window.stores,
-            selectedStoreId: ko.observable(window.storeid),
+            stores: window.checkoutConfig.stores,
+            selectedStoreId: ko.observable(window.checkoutConfig.storeid),
             enableButton: ko.observable(true), //fix for the button getting disabled
             showStores: ko.observable(true),
 
@@ -68,11 +68,10 @@ define(
                 this._super(); //you must call super on components or they will not render
                 var self = this;
 
+
                 /*
                     Set the computed variables
                  */
-
-                console.log("override-inStore");
 
                 this.isInStorePickup = ko.computed(function(){
                     if(quote.shippingMethod())

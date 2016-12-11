@@ -1,6 +1,11 @@
 {
     "name": "gaussdev/instore",
     "description": "",
+    "authors": {
+        "name": "Vladimir Sedlar",
+        "email": "vladimir.sedlar@gauss.hr",
+        "role": "developer"
+    },
     "require": {        
         "magento/magento-composer-installer": "*"
     },
