@@ -16,39 +16,41 @@ class Plugin
     public function __construct(
         \Magento\Checkout\Model\Session $session,
         CollectionFactory $availabilityCollectionFactory,
-        Collection $locationCollection
+        Collection $locationCollection,
+        \Magento\Store\Model\StoreManagerInterface $storeManage,
+        \Magento\Store\Model\Information $storeInfo
     )
     {
         $this->session = $session;
         $this->collectionFactory = $availabilityCollectionFactory;
         $this->locationCollection = $locationCollection;
+        $this->storeManager = $storeManage;
+        $this->storeInfo = $storeInfo;
     }
 
 
     public function aftergetCheckoutConfig($subject, $result)
     {
         $id = $this->session->getData('storeId', false);//get the selected store id from session
-
-
         $availableStores = $this->locationCollection->load();
-
 
         $stores = [];
         foreach ($availableStores as $store){
-
-
             $stores[] = [
+                'name' => $store->getName(),
                 'id' => $store->getBbm_stock_id(),
                 'street' => $store->getStreet(),
-                'country_id' => "HR",
+                'country_id' => "HR",//TODO use store info here
                 'postcode' => $store->getPostcode(),
                 'city' => $store->getCity(),
-                //Missing city and postcode in bbm storage
             ];
         }
 
-        $result['stores'] =$stores;
+        $this->storeManager;
+
+        $result['stores'] = $stores;
         $result['storeId'] = $id ?: $stores[0]['id'];
+        $result['saveStoreUrl'] = $this->storeManager->getStore()->getBaseUrl() . "rest/V1/saveStoreId/id/";
 
         return $result;
     }

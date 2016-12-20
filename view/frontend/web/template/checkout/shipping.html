@@ -141,7 +141,7 @@
                                                     css: {selectedStore : $parents[1].selectedStoreId() == address.id}
                                                 ">
                                                   <span data-bind="
-                                                text: address.street + ', ' + address.city
+                                                text: address.name
                                                  "></span>
                                               </td>
                                           </tr>
@@ -181,7 +181,7 @@
                 </div>
                 <!-- ko if: errorValidationMessage().length > 0 -->
                 <div class="message notice">
-                    <span><!-- ko text: errorValidationMessage()--><!-- /ko --></span>
+                    <span><!-- ko i18n: errorValidationMessage()--><!-- /ko --></span>
                 </div>
                 <!-- /ko -->
                 <div class="actions-toolbar" id="shipping-method-buttons-container">

@@ -1,3 +1,28 @@
+Array.prototype.equals = function (array) {
+    // if the other array is a falsy value, return
+    if (!array)
+        return false;
+
+    // compare lengths - can save a lot of time
+    if (this.length != array.length)
+        return false;
+
+    for (var i = 0, l=this.length; i < l; i++) {
+        // Check if we have nested arrays
+        if (this[i] instanceof Array && array[i] instanceof Array) {
+            // recurse into the nested arrays
+            if (!this[i].equals(array[i]))
+                return false;
+        }
+        else if (this[i] != array[i]) {
+            // Warning - two different object instances will never be equal: {x:20} != {x:20}
+            return false;
+        }
+    }
+    return true;
+};
+
+
 /**
  * Copyright © 2016 Magento. All rights reserved.
  * See COPYING.txt for license details.
@@ -58,6 +83,7 @@ define(
             currentBillingAddress: quote.billingAddress,
             addressOptions: addressOptions,
             customerHasAddresses: addressOptions.length > 1,
+            createdAddress: false,
 
             /**
              * Init component
@@ -97,29 +123,44 @@ define(
                     if (quote.isVirtual()) {
                         this.isAddressSameAsShipping(false);
                     } else {
-                        this.isAddressSameAsShipping(
+                       this.isAddressSameAsShipping(
                             newAddress != null &&
-                            newAddress.getCacheKey() == quote.shippingAddress().getCacheKey()
+                            this.compareAddresses(newAddress, quote.shippingAddress())
+                           // newAddress.getCacheKey() == quote.shippingAddress().getCacheKey()
                         );
                     }
-
                     if (newAddress != null && newAddress.saveInAddressBook !== undefined) {
                         this.saveInAddressBook(newAddress.saveInAddressBook);
                     } else {
                         this.saveInAddressBook(1);
                     }
 
-
-
+//CUSTOM
                     if (quote.shippingMethod().method_code == "instore"){
-                        this.isAddressDetailsVisible(!this.isAddressSameAsShipping() && newAddress !== null);
+                        this.isAddressDetailsVisible(
+                            this.createdAddress
+                            && newAddress !== null &&
+                            !this.compareAddresses(newAddress, quote.shippingAddress())//in case of instore shipping the two addresses cannot be the same
+                        );
                     }else{
-                        this.isAddressDetailsVisible(true);
+                        this.isAddressDetailsVisible(
+                            newAddress != null &&
+                            this.compareAddresses(newAddress, quote.shippingAddress()) ||
+                            this.createdAddress
+                        );
                     }
-                
                 }, this);
 
                 return this;
+            },
+
+            compareAddresses: function(address1, address2)
+            {
+                  return address1.street.equals(address2.street) &&
+                      address1.city == address2.city &&
+                      address1.postcode == address2.postcode &&
+                      address1.firstname == address2.firstname
+                  ;//TODO add more
             },
 
             canUseShippingAddress: ko.computed(function () {
@@ -165,6 +206,9 @@ define(
              * Update address action
              */
             updateAddress: function () {
+
+                this.createdAddress = true;//custom
+
                 if (this.selectedAddress() && this.selectedAddress() != newAddressOption) {
                     selectBillingAddress(this.selectedAddress());
                     checkoutData.setSelectedBillingAddress(this.selectedAddress().getKey());
@@ -196,6 +240,8 @@ define(
                         if (window.checkoutConfig.reloadOnBillingAddress) {
                             setBillingAddressAction(globalMessageList);
                         }
+
+                        this.createdAddress = true;//custom
                     }
                 }
             },

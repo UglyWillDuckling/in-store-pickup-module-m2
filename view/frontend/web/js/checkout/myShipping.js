@@ -60,7 +60,9 @@ define(
                 template: 'Magento_Checkout/shipping'
             },
             stores: window.checkoutConfig.stores,
-            selectedStoreId: ko.observable(window.checkoutConfig.storeid),
+            selectedStoreId: ko.observable(window.checkoutConfig.storeId),
+            saveStoreUrl: window.checkoutConfig.saveStoreUrl,
+
             enableButton: ko.observable(true), //fix for the button getting disabled
             showStores: ko.observable(true),
 
@@ -69,16 +71,24 @@ define(
                 var self = this;
 
 
+                this.firstAddress = addressList()[0];
+
                 /*
                     Set the computed variables
                  */
-
                 this.isInStorePickup = ko.computed(function(){
                     if(quote.shippingMethod())
                     {
                         var inStore = quote.shippingMethod().method_code == "instore";
 
-                        self.updateFormFields(self.selectedStore(), inStore);
+                        if(inStore && self.isFormInline)
+                        {
+                            self.updateFormFields(self.selectedStore(), true);
+                        }
+                        else if(!inStore && self.isFormInline){
+                            self.updateFormFields(self.oldAddress, false, true);
+                        }
+
                         return inStore;
                     }
                 });
@@ -87,7 +97,7 @@ define(
                     for(var i=0; i<self.stores.length; i++)
                     {
                         var store = self.stores[i];
-                        if(stores[i].id == self.selectedStoreId()) return store;
+                        if(self.stores[i].id == self.selectedStoreId()) return store;
                     }
                 });
 
@@ -108,12 +118,106 @@ define(
                 return true;
             },
 
-            updateFormFields: function(data, disable){
+            createNewAddress: function(address){
+
+                var addressData = {};
+                for(var property in address){
+                    if(property == "id")
+                        continue;
+
+                    if(property == "street"){
+                        addressData[property] = {0: address[property]};
+                        continue;
+                    }
+
+                    addressData[property] = address[property];
+                }
+                //set the users data for the shipping address
+                addressData['firstname'] = customer.customerData.firstname;
+                addressData['lastname'] = customer.customerData.lastname;
+
+                addressData['telephone'] = customer.customerData.addresses[0]['telephone'];//TODO this should be done in backend
+                addressData['company'] = "";//TODO check if this is needed
+
+                var newAddress = createShippingAddress(addressData);
+
+                return newAddress;
+            },
+
+            updateFormFields: function(data, disable, update){
 
                 for (var property in data) {
                      if(property == "id") continue;
 
                      if (data.hasOwnProperty(property)) {
+                         var input =  this.getInput(property);
+
+                         input.val(data[property]);
+
+                        input.keyup();
+                        input.prop('disabled', disable);
+                     }
+                }
+            },
+
+            getInput: function(prop)
+            {
+                if(prop == "street") {
+                    return $('#shipping').find('input[name="' + prop + '[0]"]');
+                }
+                else{
+                    return $('#shipping').find('input[name="' + prop + '"]');
+                }
+            },
+
+            /**
+             * @param {Object} shippingMethod
+             * @return {Boolean}
+             */
+            selectShippingMethod: function (parent, shippingMethod, event)
+            {
+                //TODO trebalo bi provjeravat da li korisnik ima adrese, treba refaktorirat
+
+                if(shippingMethod.carrier_code == "instore")
+                {
+                    //first save the current information from the form
+                    parent.saveAddressInformation();
+
+                    //then find the selected store and click it
+                    var store = $("input[name=store]").first();
+                    store.click();
+                }
+                else{
+                    //TODO probaj ovo zamjenit s knockoutom
+                    $("input:disabled").each(function(){
+                        $(this).prop('disabled', false);
+                    });
+
+                    $("#shipping").show();
+                    parent.showStores(false);
+
+
+                    if(!parent.isFormInline) {
+                        quote.shippingAddress(parent.firstAddress);
+                    }
+                }
+
+                selectShippingMethodAction(shippingMethod);
+                checkoutData.setSelectedShippingRate(shippingMethod.carrier_code + '_' + shippingMethod.method_code);
+
+                return true;
+            },
+
+            //TODO refactor this, make it a get method
+            saveAddressInformation: function(){
+
+                var data = this.selectedStore();
+                var address = {};
+
+                for (var property in data) {
+                    if(property == "id") continue;
+
+                    if (data.hasOwnProperty(property)) {
 
                         if(property == "street")
                         {
@@ -123,65 +227,33 @@ define(
                             var input = $('#shipping').find('input[name="' + property + '"]');
                         }
 
-
-
-                        if(disable){
-                            input.val(data[property]);
-                        }
-
-                        input.keyup();
-                        input.prop('disabled', disable);
-                     }
-                }
-            },
-
-            /**
-             * @param {Object} shippingMethod
-             * @return {Boolean}
-             */
-            selectShippingMethod: function (parent, shippingMethod, event) {
-                selectShippingMethodAction(shippingMethod);
-                checkoutData.setSelectedShippingRate(shippingMethod.carrier_code + '_' + shippingMethod.method_code);
-
-                if(shippingMethod.carrier_code == "instore")
-                {
-                    var store = $("input[name=store]").first();
-
-                    //store.prop("checked", true);
-                    store.click();
-                    //find the selected store and click it
-                }
-                else{
-                    //$("tr.stores").hide();
-                    //enable all the disabled inputs
-                    $("input:disabled").each(function(){
-                        $(this).prop('disabled', false);
-                    });
-
-                    parent.showStores(false);
-
-                    $("#shipping").show();//show the addresses if they were hidden
+                        address[property] = input.val();
+                    }
                 }
 
-                return true;
+                this.oldAddress = address;
             },
 
             setStoreAddress: function(){
 
-                var shippingAddress = quote.shippingAddress();
                 var storeAddress = this.selectedStore();
+                var shippingAddress = _.clone(quote.shippingAddress());
 
                 //replace the values from the shippingAddress with the storeAddress's
                 for (var property in storeAddress)
                 {
                     if (property == "id")
                     {
-                    //send the selected storeId to the backend
+                        //send the selected storeId to the backend
                         this.saveStoreId(storeAddress['id']);
                         continue;
                     }
 
                     if (storeAddress.hasOwnProperty(property)) {
+
+                        if(property == "name") {
+                            continue;
+                        }
 
                         if(property == "street") {
                             shippingAddress[property] = new Array(storeAddress[property]);
@@ -197,13 +269,20 @@ define(
                     //set the users data for the shipping address
                     shippingAddress['firstname'] = customer.customerData.firstname;
                     shippingAddress['lastname'] = customer.customerData.lastname;
+
+                    shippingAddress['telephone'] = customer.customerData.addresses[0]['telephone'];
                 }
+
+       /*         selectShippingAddress(shippingAddress);
+                checkoutData.setSelectedShippingAddress(shippingAddress.getKey());
+                checkoutData.setNewCustomerShippingAddress(shippingAddress);
+                */
 
                 quote.shippingAddress(shippingAddress);
             },
 
             saveStoreId: function(id){
-                var url = 'http://magicbaby.loc/rest/V1/saveStoreId/id/' + id;
+                var url = this.saveStoreUrl + id;
 
                 $.ajax({
                     url: url,
@@ -211,7 +290,6 @@ define(
                     contentType: 'application/json'
                 });
             },
-
             /**
              * @return {Boolean}
              */
@@ -222,7 +300,7 @@ define(
                     loginFormSelector = 'form[data-role=email-with-possible-login]',
                     emailValidationResult = customer.isLoggedIn();
                 if (!quote.shippingMethod()) {
-                    this.errorValidationMessage('Please specify a shipping method.');
+                    this.errorValidationMessage($t('Please specify a shipping method.'));
 
                     return false;
                 }
@@ -253,6 +331,7 @@ define(
                     addressData = addressConverter.formAddressDataToQuoteAddress(
                         this.source.get('shippingAddress')
                     );
+
                     //Copy form data to quote shipping address object
                     for (var field in addressData) {
 
@@ -274,15 +353,16 @@ define(
                     }
                     selectShippingAddress(shippingAddress);
                 }
+                else{
+                    if(quote.shippingMethod().method_code == "instore"){
+                        this.setStoreAddress();
+                    }
+                }
 
                 if (!emailValidationResult) {
                     $(loginFormSelector + ' input[name=username]').focus();
 
                     return false;
-                }
-
-                if(quote.shippingMethod().method_code == "instore"){
-                    this.setStoreAddress();
                 }
 
                 return true;
