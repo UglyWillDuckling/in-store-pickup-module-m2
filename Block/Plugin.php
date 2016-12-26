@@ -3,9 +3,9 @@
 
 namespace GaussDev\InStore\Block;
 
-use GaussDev\BBM\Model\ResourceModel\Availability\CollectionFactory;
 use Magento\Framework\Webapi\Exception;
-use GaussDev\BBM\Model\ResourceModel\Location\Collection;
+
+use GaussDev\InStore\Model\ResourceModel\Location\Collection;
 
 
 class Plugin
@@ -15,14 +15,12 @@ class Plugin
 
     public function __construct(
         \Magento\Checkout\Model\Session $session,
-        CollectionFactory $availabilityCollectionFactory,
         Collection $locationCollection,
         \Magento\Store\Model\StoreManagerInterface $storeManage,
         \Magento\Store\Model\Information $storeInfo
     )
     {
         $this->session = $session;
-        $this->collectionFactory = $availabilityCollectionFactory;
         $this->locationCollection = $locationCollection;
         $this->storeManager = $storeManage;
         $this->storeInfo = $storeInfo;
@@ -33,6 +31,8 @@ class Plugin
     {
         $id = $this->session->getData('storeId', false);//get the selected store id from session
         $availableStores = $this->locationCollection->load();
+
+
 
         $stores = [];
         foreach ($availableStores as $store){
