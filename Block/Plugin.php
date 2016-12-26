@@ -37,19 +37,19 @@ class Plugin
         $stores = [];
         foreach ($availableStores as $store){
             $stores[] = [
-                'name' => $store->getName(),
-                'id' => $store->getBbm_stock_id(),
-                'street' => $store->getStreet(),
+//TODO use location_id  'id' =>         $store->getBbm_stock_id(),
+                'city' =>       $store->getCity(),
+                'name' =>       $store->getName(),
+                'street' =>     $store->getStreet(),
+                'postcode' =>   $store->getPostcode(),
                 'country_id' => "HR",//TODO use store info here
-                'postcode' => $store->getPostcode(),
-                'city' => $store->getCity(),
             ];
         }
 
         $this->storeManager;
 
-        $result['stores'] = $stores;
-        $result['storeId'] = $id ?: $stores[0]['id'];
+        $result['stores'] =       $stores;
+        $result['storeId'] =      $id ?: $stores[0]['id'];
         $result['saveStoreUrl'] = $this->storeManager->getStore()->getBaseUrl() . "rest/V1/saveStoreId/id/";
 
         return $result;

@@ -8,6 +8,6 @@
     {
         public function _construct()
         {
-            $this->_init("gaussdev_instore_location", "entity_id");
+            $this->_init("gaussdev_store_locations", "location_id");
         }
     }
