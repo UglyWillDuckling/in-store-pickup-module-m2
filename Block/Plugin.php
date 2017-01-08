@@ -6,6 +6,7 @@ namespace GaussDev\InStore\Block;
 use Magento\Framework\Webapi\Exception;
 
 use GaussDev\InStore\Model\ResourceModel\Location\Collection;
+use Magento\Framework\Locale\Resolver;
 
 
 class Plugin
@@ -17,19 +18,21 @@ class Plugin
         \Magento\Checkout\Model\Session $session,
         Collection $locationCollection,
         \Magento\Store\Model\StoreManagerInterface $storeManage,
-        \Magento\Store\Model\Information $storeInfo
+        \Magento\Store\Model\Information $storeInfo,
+        Resolver $resolver
     )
     {
         $this->session = $session;
         $this->locationCollection = $locationCollection;
         $this->storeManager = $storeManage;
         $this->storeInfo = $storeInfo;
+        $this->locale = $resolver->getLocale();
     }
 
 
     public function aftergetCheckoutConfig($subject, $result)
     {
-        $id = $this->session->getData('storeId', false);//get the selected store id from session
+        $id = $this->session->getData('storeId', false);//get the previously selected store id from session
         $availableStores = $this->locationCollection->load();
 
 
@@ -37,12 +40,11 @@ class Plugin
         $stores = [];
         foreach ($availableStores as $store){
             $stores[] = [
-//TODO use location_id  'id' =>         $store->getBbm_stock_id(),
                 'city' =>       $store->getCity(),
                 'name' =>       $store->getName(),
                 'street' =>     $store->getStreet(),
                 'postcode' =>   $store->getPostcode(),
-                'country_id' => "HR",//TODO use store info here
+                'country_id' => $this->getLocale()
             ];
         }
 
@@ -64,5 +66,11 @@ class Plugin
         $id = $addressInformation->getData('shipping_address')->getData('id');
 
         $this->session->setData('storeId', $id);
+    }
+
+
+    protected function getLocale()
+    {
+        return substr($this->locale, strpos($this->locale, "_") + 1);
     }
 }

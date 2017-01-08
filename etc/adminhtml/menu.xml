@@ -1,6 +1,0 @@
-<?xml version="1.0"?>
-<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Backend:etc/menu.xsd">
-    <menu>
-        <add id="GaussDev_InStore::location" title="Locations" module="GaussDev_InStore" sortOrder="100" parent="Magento_Backend::stores_attributes" resource="GaussDev_InStore::location" action="gaussdev_instore/location/index"/>
-    </menu>
-</config>
