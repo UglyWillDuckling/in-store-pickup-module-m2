@@ -6,9 +6,17 @@
  */
 -->
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <!--plugin-->
     <type name="Magento\Checkout\Block\Onepage">
         <plugin name="magento-checkout-product-plugin" type="GaussDev\InStore\Block\Plugin" sortOrder="1"/>
     </type>
+
+   <type name="GaussDev\InStore\Block\Plugin">
+        <arguments>
+            <argument name="locationCollectionName" xsi:type="string">GaussDev\Locations\Model\ResourceModel\Location\Collection</argument>
+        </arguments>
+    </type>
+    <!--plugin-->
 
     <!--api interface-->
     <preference for="GaussDev\InStore\Api\MyStoreInterface" type="GaussDev\InStore\Model\MyStore"/>

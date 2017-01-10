@@ -235,8 +235,16 @@ define(
             },
 
             setStoreAddress: function(){
-
                 var storeAddress = this.selectedStore();
+
+                //send the selected storeId to the backend
+                this.saveStoreId(storeAddress['id']);
+
+                //if the user is using a form to select the address there's nothing more to do here
+                if(this.isFormInline) return;
+
+
+
                 var shippingAddress = _.clone(quote.shippingAddress());
 
                 //replace the values from the shippingAddress with the storeAddress's
@@ -244,7 +252,6 @@ define(
                 {
                     if (property == "id")
                     {
-                        //send the selected storeId to the backend
                         this.saveStoreId(storeAddress['id']);
                         continue;
                     }
@@ -272,11 +279,6 @@ define(
 
                     shippingAddress['telephone'] = customer.customerData.addresses[0]['telephone'];
                 }
-
-       /*         selectShippingAddress(shippingAddress);
-                checkoutData.setSelectedShippingAddress(shippingAddress.getKey());
-                checkoutData.setNewCustomerShippingAddress(shippingAddress);
-                */
 
                 quote.shippingAddress(shippingAddress);
             },
@@ -353,7 +355,7 @@ define(
                     }
                     selectShippingAddress(shippingAddress);
                 }
-                else{
+                else{//TODO change this, move the check inside the setStoreAddress method
                     if(quote.shippingMethod().method_code == "instore"){
                         this.setStoreAddress();
                     }

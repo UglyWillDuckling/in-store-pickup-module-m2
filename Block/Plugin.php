@@ -5,28 +5,32 @@ namespace GaussDev\InStore\Block;
 
 use Magento\Framework\Webapi\Exception;
 
-use GaussDev\InStore\Model\ResourceModel\Location\Collection;
 use Magento\Framework\Locale\Resolver;
-
+use Magento\Checkout\Model\Session as checkoutSession;
+use Magento\Store\Model\Information;
+use Magento\Store\Model\StoreManagerInterface;
+use GaussDev\Locations\Model\ResourceModel\Location\Collection;
 
 class Plugin
 {
-    protected $session, $availabilityCollectionFactory;
+    public $session, $locationCollection, $storeManager, $storeInfo, $locale;
 
 
     public function __construct(
-        \Magento\Checkout\Model\Session $session,
-        Collection $locationCollection,
-        \Magento\Store\Model\StoreManagerInterface $storeManage,
-        \Magento\Store\Model\Information $storeInfo,
-        Resolver $resolver
+        checkoutSession $session,
+        StoreManagerInterface $storeManage,
+        Information $storeInfo,
+        Resolver $resolver,
+        \Magento\Framework\ObjectManagerInterface $objectManager,
+        $locationCollectionName //get this from di.xml
     )
     {
         $this->session = $session;
-        $this->locationCollection = $locationCollection;
         $this->storeManager = $storeManage;
         $this->storeInfo = $storeInfo;
         $this->locale = $resolver->getLocale();
+
+        $this->locationCollection = $objectManager->create($locationCollectionName);//($locationCollectionName);
     }
 
 
@@ -40,6 +44,7 @@ class Plugin
         $stores = [];
         foreach ($availableStores as $store){
             $stores[] = [
+                'id' => $store->getId(),
                 'city' =>       $store->getCity(),
                 'name' =>       $store->getName(),
                 'street' =>     $store->getStreet(),
@@ -48,26 +53,12 @@ class Plugin
             ];
         }
 
-        $this->storeManager;
-
         $result['stores'] =       $stores;
         $result['storeId'] =      $id ?: $stores[0]['id'];
         $result['saveStoreUrl'] = $this->storeManager->getStore()->getBaseUrl() . "rest/V1/saveStoreId/id/";
 
         return $result;
     }
-
-    public function beforesaveAddressInformation(
-        \Magento\Checkout\Model\ShippingInformationManagement $subject,
-        $cartId,
-        \Magento\Checkout\Api\Data\ShippingInformationInterface $addressInformation
-    )
-    {
-        $id = $addressInformation->getData('shipping_address')->getData('id');
-
-        $this->session->setData('storeId', $id);
-    }
-
 
     protected function getLocale()
     {
