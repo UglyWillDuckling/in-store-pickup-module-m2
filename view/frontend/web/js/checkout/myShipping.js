@@ -74,7 +74,7 @@ define(
                 this.firstAddress = addressList()[0];
 
                 /*
-                    Set the computed variables
+                 Set the computed variables
                  */
                 this.isInStorePickup = ko.computed(function(){
                     if(quote.shippingMethod())
@@ -147,16 +147,16 @@ define(
             updateFormFields: function(data, disable, update){
 
                 for (var property in data) {
-                     if(property == "id") continue;
+                    if(property == "id") continue;
 
-                     if (data.hasOwnProperty(property)) {
-                         var input =  this.getInput(property);
+                    if (data.hasOwnProperty(property)) {
+                        var input =  this.getInput(property);
 
-                         input.val(data[property]);
+                        input.val(data[property]);
 
                         input.keyup();
                         input.prop('disabled', disable);
-                     }
+                    }
                 }
             },
 
@@ -176,8 +176,6 @@ define(
              */
             selectShippingMethod: function (parent, shippingMethod, event)
             {
-                //TODO trebalo bi provjeravat da li korisnik ima adrese, treba refaktorirat
-
                 if(shippingMethod.carrier_code == "instore")
                 {
                     //first save the current information from the form
@@ -208,7 +206,6 @@ define(
                 return true;
             },
 
-            //TODO refactor this, make it a get method
             saveAddressInformation: function(){
 
                 var data = this.selectedStore();
@@ -235,16 +232,8 @@ define(
             },
 
             setStoreAddress: function(){
+
                 var storeAddress = this.selectedStore();
-
-                //send the selected storeId to the backend
-                this.saveStoreId(storeAddress['id']);
-
-                //if the user is using a form to select the address there's nothing more to do here
-                if(this.isFormInline) return;
-
-
-
                 var shippingAddress = _.clone(quote.shippingAddress());
 
                 //replace the values from the shippingAddress with the storeAddress's
@@ -252,6 +241,7 @@ define(
                 {
                     if (property == "id")
                     {
+                        //send the selected storeId to the backend
                         this.saveStoreId(storeAddress['id']);
                         continue;
                     }
@@ -355,7 +345,7 @@ define(
                     }
                     selectShippingAddress(shippingAddress);
                 }
-                else{//TODO change this, move the check inside the setStoreAddress method
+                else{
                     if(quote.shippingMethod().method_code == "instore"){
                         this.setStoreAddress();
                     }
