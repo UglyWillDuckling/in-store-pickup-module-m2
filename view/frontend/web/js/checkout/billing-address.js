@@ -123,10 +123,10 @@ define(
                     if (quote.isVirtual()) {
                         this.isAddressSameAsShipping(false);
                     } else {
-                       this.isAddressSameAsShipping(
+                        this.isAddressSameAsShipping(
                             newAddress != null &&
                             this.compareAddresses(newAddress, quote.shippingAddress())
-                           // newAddress.getCacheKey() == quote.shippingAddress().getCacheKey()
+                            // newAddress.getCacheKey() == quote.shippingAddress().getCacheKey()
                         );
                     }
                     if (newAddress != null && newAddress.saveInAddressBook !== undefined) {
@@ -134,19 +134,15 @@ define(
                     } else {
                         this.saveInAddressBook(1);
                     }
-
-//CUSTOM
-                    if (quote.shippingMethod().method_code == "instore"){
+                    //CUSTOM
+                    if (quote.shippingMethod() && quote.shippingMethod().method_code == "instore") {
                         this.isAddressDetailsVisible(
-                            this.createdAddress
-                            && newAddress !== null &&
-                            !this.compareAddresses(newAddress, quote.shippingAddress())//in case of instore shipping the two addresses cannot be the same
+                            newAddress !== null &&
+                            !this.compareAddresses(newAddress, quote.shippingAddress())//in case of instore shipping the two addresses mustn't be the same
                         );
                     }else{
                         this.isAddressDetailsVisible(
-                            newAddress != null &&
-                            this.compareAddresses(newAddress, quote.shippingAddress()) ||
-                            this.createdAddress
+                            newAddress != null
                         );
                     }
                 }, this);
@@ -156,11 +152,11 @@ define(
 
             compareAddresses: function(address1, address2)
             {
-                  return address1.street.equals(address2.street) &&
-                      address1.city == address2.city &&
-                      address1.postcode == address2.postcode &&
-                      address1.firstname == address2.firstname
-                  ;//TODO add more
+                return address1.street.equals(address2.street) &&
+                    address1.city == address2.city &&
+                    address1.postcode == address2.postcode &&
+                    address1.firstname == address2.firstname
+                    ;//TODO add more
             },
 
             canUseShippingAddress: ko.computed(function () {
@@ -205,13 +201,15 @@ define(
             /**
              * Update address action
              */
-            updateAddress: function () {
-
-                this.createdAddress = true;//custom
-
+            updateAddress: function ()
+            {
                 if (this.selectedAddress() && this.selectedAddress() != newAddressOption) {
-                    selectBillingAddress(this.selectedAddress());
+                    /*
+                     first set the selected billing address to
+                     make sure there is a selected billing address when selecting it bellow
+                     */
                     checkoutData.setSelectedBillingAddress(this.selectedAddress().getKey());
+                    selectBillingAddress(this.selectedAddress());
                     if (window.checkoutConfig.reloadOnBillingAddress) {
                         setBillingAddressAction(globalMessageList);
                     }
@@ -232,16 +230,19 @@ define(
                         addressData.save_in_address_book = this.saveInAddressBook() ? 1 : 0;
                         newBillingAddress = createBillingAddress(addressData);
 
+                        /*
+                         first set the selected billing address to
+                         make sure there is a selected billing address when selecting it bellow
+                         */
+                        checkoutData.setSelectedBillingAddress(newBillingAddress.getKey());
+
                         // New address must be selected as a billing address
                         selectBillingAddress(newBillingAddress);
-                        checkoutData.setSelectedBillingAddress(newBillingAddress.getKey());
                         checkoutData.setNewCustomerBillingAddress(addressData);
 
                         if (window.checkoutConfig.reloadOnBillingAddress) {
                             setBillingAddressAction(globalMessageList);
                         }
-
-                        this.createdAddress = true;//custom
                     }
                 }
             },
@@ -264,19 +265,17 @@ define(
                 if (quote.billingAddress()) {
                     // restore 'Same As Shipping' checkbox state
                     this.isAddressSameAsShipping(
-                        quote.billingAddress() != null &&
-                        quote.billingAddress().getCacheKey() == quote.shippingAddress().getCacheKey() &&
+                        this.compareAddresses(quote.billingAddress(), quote.shippingAddress()) &&
                         !quote.isVirtual()
                     );
 
                     if(quote.shippingMethod().method_code == "instore")
                     {
                         if(this.isAddressSameAsShipping() || quote.billingAddress() == null) {
+                            this.isAddressDetailsVisible(false);
                             return false;
                         }
                     }
-
-
                     this.isAddressDetailsVisible(true);
                 }
             },

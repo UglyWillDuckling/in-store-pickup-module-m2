@@ -74,7 +74,7 @@ define(
                 this.firstAddress = addressList()[0];
 
                 /*
-                 Set the computed variables
+                    Set the computed variables
                  */
                 this.isInStorePickup = ko.computed(function(){
                     if(quote.shippingMethod())
@@ -147,16 +147,16 @@ define(
             updateFormFields: function(data, disable, update){
 
                 for (var property in data) {
-                    if(property == "id") continue;
+                     if(property == "id") continue;
 
-                    if (data.hasOwnProperty(property)) {
-                        var input =  this.getInput(property);
+                     if (data.hasOwnProperty(property)) {
+                         var input =  this.getInput(property);
 
-                        input.val(data[property]);
+                         input.val(data[property]);
 
                         input.keyup();
                         input.prop('disabled', disable);
-                    }
+                     }
                 }
             },
 
@@ -206,6 +206,7 @@ define(
                 return true;
             },
 
+            //TODO refactor this, make it a get method
             saveAddressInformation: function(){
 
                 var data = this.selectedStore();
@@ -269,6 +270,11 @@ define(
 
                     shippingAddress['telephone'] = customer.customerData.addresses[0]['telephone'];
                 }
+
+       /*         selectShippingAddress(shippingAddress);
+                checkoutData.setSelectedShippingAddress(shippingAddress.getKey());
+                checkoutData.setNewCustomerShippingAddress(shippingAddress);
+                */
 
                 quote.shippingAddress(shippingAddress);
             },
